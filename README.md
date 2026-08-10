@@ -139,5 +139,4 @@ The system is designed to degrade gracefully:
 ---
 
 ## Author
-
-Built as a college major project.
+Sujal Pawar
