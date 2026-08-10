@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            padding: 30px 20px; overflow: hidden; position: relative;
+        }
+
+        .particles { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+        .particle { position: absolute; width: 4px; height: 4px; background: rgba(0, 212, 255, 0.3); border-radius: 50%; animation: float 15s infinite linear; }
+        .particle:nth-child(1) { left: 10%; animation-delay: 0s; animation-duration: 12s; }
+        .particle:nth-child(2) { left: 25%; animation-delay: 2s; animation-duration: 18s; width: 6px; height: 6px; }
+        .particle:nth-child(3) { left: 40%; animation-delay: 4s; animation-duration: 14s; }
+        .particle:nth-child(4) { left: 55%; animation-delay: 1s; animation-duration: 20s; width: 3px; height: 3px; }
+        .particle:nth-child(5) { left: 70%; animation-delay: 3s; animation-duration: 16s; }
+        .particle:nth-child(6) { left: 85%; animation-delay: 5s; animation-duration: 13s; width: 5px; height: 5px; }
+        .particle:nth-child(7) { left: 15%; animation-delay: 6s; animation-duration: 17s; }
+        .particle:nth-child(8) { left: 60%; animation-delay: 7s; animation-duration: 19s; width: 3px; height: 3px; }
+        .particle:nth-child(9) { left: 90%; animation-delay: 2s; animation-duration: 15s; }
+        .particle:nth-child(10) { left: 35%; animation-delay: 8s; animation-duration: 21s; width: 6px; height: 6px; }
+        @keyframes float {
+            0% { bottom: -10px; opacity: 0; transform: translateX(0); }
+            10% { opacity: 1; } 90% { opacity: 1; }
+            100% { bottom: 110%; opacity: 0; transform: translateX(20px); }
+        }
+
+        .orb { position: absolute; border-radius: 50%; filter: blur(60px); z-index: 0; animation: pulse 4s infinite ease-in-out; }
+        .orb-1 { width: 300px; height: 300px; background: rgba(0, 212, 255, 0.08); top: -100px; left: -100px; }
+        .orb-2 { width: 250px; height: 250px; background: rgba(118, 75, 162, 0.1); bottom: -80px; right: -80px; animation-delay: 2s; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 0.8; } }
+
+        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes shimmerText { 0%, 100% { text-shadow: 0 0 15px rgba(0, 212, 255, 0.3); } 50% { text-shadow: 0 0 30px rgba(0, 212, 255, 0.6); } }
+
+        .welcome-box {
+            position: relative; text-align: center; z-index: 1;
+            animation: fadeInScale 0.6s ease-out;
+            max-width: 500px;
+        }
+
+        .emoji { font-size: 60px; margin-bottom: 10px; }
+
+        .welcome-box h1 {
+            font-size: 42px; color: #00d4ff; margin-bottom: 15px;
+            animation: shimmerText 3s infinite ease-in-out;
+        }
+
+        .welcome-box p { color: #a0a0b0; font-size: 18px; margin-bottom: 35px; }
+        .welcome-box p span { color: #00d4ff; font-weight: 700; }
+
+        .btn {
+            background: linear-gradient(135deg, #00d4ff 0%, #0f3460 100%);
+            background-size: 200% 200%;
+            color: white; border: none; padding: 16px 30px; border-radius: 12px;
+            font-size: 16px; cursor: pointer; font-weight: 700; width: 100%;
+            text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s;
+            text-align: center; display: block; text-decoration: none;
+        }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0, 212, 255, 0.4); background-position: 100% 100%; }
+        .btn:active { transform: translateY(0); }
+
+        .nav-link {
+            display: block; text-align: center; margin-top: 20px;
+            color: #a0a0b0; text-decoration: none; font-size: 14px;
+            font-weight: 600; padding: 12px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px; transition: all 0.3s;
+        }
+        .nav-link:hover {
+            color: #ff6b6b; border-color: rgba(255, 107, 107, 0.3);
+            background: rgba(255, 107, 107, 0.05);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="particles">
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
+    </div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="welcome-box">
+        <div class="emoji">🎉</div>
+        <h1>Login Successful!</h1>
+        <p>Welcome, <span>{{ user.username }}</span>!</p>
+
+        <a href="{% url 'job_upload' %}" class="btn">Create New Job</a>
+        <a href="{% url 'logout' %}" class="nav-link">Logout</a>
+    </div>
+
+</body>
+</html>

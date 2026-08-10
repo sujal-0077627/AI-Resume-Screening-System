@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candidates - {{ job.title }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            padding: 30px 20px;
+        }
+        .container { max-width: 1100px; margin: 0 auto; }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideRight {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes pop {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px 30px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideRight 0.5s ease-out;
+        }
+        .header h1 {
+            color: #00d4ff;
+            font-size: 20px;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        }
+        .header p { color: #a0a0b0; font-size: 13px; margin-top: 4px; }
+        .back-link {
+            color: #00d4ff; text-decoration: none;
+            font-weight: 600; font-size: 14px;
+            padding: 8px 16px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        .back-link:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: #00d4ff;
+            transform: translateX(-3px);
+        }
+
+        .messages { margin-bottom: 20px; animation: pop 0.4s ease-out; }
+        .messages ul { list-style: none; }
+        .messages li {
+            padding: 12px 20px; border-radius: 8px;
+            margin-bottom: 8px; font-size: 14px; font-weight: 500;
+        }
+        .success { background: rgba(40, 167, 69, 0.15); color: #50d870; border: 1px solid rgba(40, 167, 69, 0.3); }
+        .error { background: rgba(220, 53, 69, 0.15); color: #ff6b6b; border: 1px solid rgba(220, 53, 69, 0.3); }
+
+        .card {
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 35px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            animation: slideUp 0.6s ease-out;
+            transition: border-color 0.3s;
+        }
+        .card:hover { border-color: rgba(0, 212, 255, 0.2); }
+
+        .upload-card { max-width: 500px; margin: 0 auto 20px; }
+
+        .card-title {
+            color: #ffffff; font-size: 20px; font-weight: 700;
+            margin-bottom: 5px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .card-title .icon {
+            width: 30px; height: 30px;
+            background: linear-gradient(135deg, #00d4ff, #0f3460);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px;
+        }
+        .card-subtitle { color: #a0a0b0; font-size: 14px; margin-bottom: 25px; padding-left: 40px; }
+
+        label {
+            display: block; color: #c0c0d0; font-size: 13px;
+            font-weight: 600; margin-bottom: 8px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        input[type="text"] {
+            width: 100%; padding: 14px 16px; margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px; font-size: 14px; color: #fff;
+            transition: all 0.3s;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.05);
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+        }
+        input[type="text"]::placeholder { color: #606070; }
+
+        .file-zone {
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .file-zone:hover {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.05);
+        }
+        .file-zone input[type="file"] { display: none; }
+        .file-zone .upload-icon { font-size: 28px; margin-bottom: 8px; }
+        .file-zone .upload-text { color: #c0c0d0; font-size: 14px; font-weight: 500; }
+        .file-zone .upload-hint { color: #606070; font-size: 12px; margin-top: 4px; }
+
+        .btn {
+            background: linear-gradient(135deg, #00d4ff 0%, #0f3460 100%);
+            color: white; border: none;
+            padding: 14px 30px; border-radius: 10px;
+            font-size: 15px; cursor: pointer; font-weight: 700;
+            width: 100%;
+            text-transform: uppercase; letter-spacing: 1px;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.3);
+        }
+        .btn:active { transform: translateY(0); }
+
+        .table-title {
+            color: #fff; font-size: 18px; font-weight: 700;
+            margin-bottom: 20px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .table-title .count {
+            background: rgba(0, 212, 255, 0.15);
+            color: #00d4ff;
+            padding: 2px 12px; border-radius: 10px;
+            font-size: 14px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        table { width: 100%; border-collapse: collapse; }
+        thead tr {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(15, 52, 96, 0.3));
+        }
+        th {
+            color: #00d4ff;
+            padding: 14px 14px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+            white-space: nowrap;
+        }
+        th:first-child { border-radius: 12px 0 0 0; }
+        th:last-child { border-radius: 0 12px 0 0; }
+        td {
+            padding: 14px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 13px; color: #d0d0e0;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+        td.skills-cell { white-space: normal; max-width: 200px; }
+        tbody tr { transition: all 0.2s; }
+        tbody tr:hover { background: rgba(0, 212, 255, 0.05); }
+        tbody tr:last-child td { border-bottom: none; }
+
+        .rank-badge {
+            display: inline-block; width: 28px; height: 28px; line-height: 28px;
+            text-align: center; border-radius: 50%;
+            font-weight: bold; font-size: 13px;
+            transition: transform 0.2s;
+        }
+        .rank-badge:hover { transform: scale(1.2); }
+        .rank-1 { background: linear-gradient(135deg, #ffd700, #ffaa00); color: #1a1a2e; box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); }
+        .rank-2 { background: linear-gradient(135deg, #e0e0e0, #c0c0c0); color: #1a1a2e; box-shadow: 0 0 10px rgba(192, 192, 192, 0.3); }
+        .rank-3 { background: linear-gradient(135deg, #cd7f32, #b06520); color: #fff; box-shadow: 0 0 10px rgba(205, 127, 50, 0.3); }
+        .rank-other { background: rgba(255, 255, 255, 0.1); color: #c0c0d0; }
+
+        .score-bar {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            width: 70px; height: 22px;
+            overflow: hidden;
+        }
+        .score-fill {
+            height: 100%; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px; color: white; font-weight: bold;
+        }
+        .score-high { background: linear-gradient(90deg, #28a745, #20c997); }
+        .score-mid { background: linear-gradient(90deg, #ffc107, #ff9800); }
+        .score-low { background: linear-gradient(90deg, #dc3545, #c82333); }
+
+        .skill-tag {
+            display: inline-block;
+            background: rgba(40, 167, 69, 0.15);
+            color: #50d870;
+            border: 1px solid rgba(40, 167, 69, 0.3);
+            padding: 3px 8px; border-radius: 6px;
+            font-size: 11px; margin: 1px;
+            transition: all 0.2s;
+        }
+        .skill-tag:hover { background: rgba(40, 167, 69, 0.3); transform: scale(1.05); }
+        .missing-tag {
+            display: inline-block;
+            background: rgba(220, 53, 69, 0.15);
+            color: #ff6b6b;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            padding: 3px 8px; border-radius: 6px;
+            font-size: 11px; margin: 1px;
+            transition: all 0.2s;
+        }
+        .missing-tag:hover { background: rgba(220, 53, 69, 0.3); transform: scale(1.05); }
+
+        .detail-link {
+            color: #00d4ff; text-decoration: none;
+            font-weight: 600; font-size: 12px;
+            padding: 4px 10px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 6px;
+            transition: all 0.2s;
+            display: inline-block;
+        }
+        .detail-link:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: #00d4ff;
+        }
+
+        .level-badge {
+            display: inline-block; padding: 3px 10px;
+            border-radius: 6px; font-size: 11px; font-weight: 600;
+        }
+        .level-Fresher { background: rgba(21, 101, 192, 0.2); color: #64b5f6; }
+        .level-Junior { background: rgba(230, 81, 0, 0.2); color: #ffb74d; }
+        .level-Senior { background: rgba(123, 31, 162, 0.2); color: #ce93d8; }
+
+        .no-candidates {
+            text-align: center; padding: 50px 30px;
+            color: #606070; font-size: 15px;
+        }
+        .no-candidates .emoji { font-size: 40px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <div class="header">
+            <div>
+                <h1>&#128188; {{ job.title }}</h1>
+                <p>{{ job.description }}</p>
+            </div>
+            <a href="{% url 'home' %}" class="back-link">&#8592; Back</a>
+        </div>
+
+        {% if messages %}
+        <div class="messages">
+            <ul>
+                {% for message in messages %}
+                <li class="{{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div class="card upload-card">
+            <div class="card-title">
+                <span class="icon">&#43;</span>
+                Add Candidates
+            </div>
+            <div class="card-subtitle">Upload one or more resumes (PDF, or a ZIP of PDFs) &mdash; name, email &amp; phone will be auto-extracted</div>
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <label class="file-zone" for="fileInput">
+                    <div class="upload-icon">&#128196;</div>
+                    <div class="upload-text">Click to choose files or drag &amp; drop</div>
+                    <div class="upload-hint">PDF files or a ZIP of PDFs</div>
+                    <input type="file" name="resumes" id="fileInput" accept=".pdf,.zip" multiple required>
+                </label>
+
+                <div id="fileListBox" style="display:none; margin-top:14px;">
+                    <div id="fileCountLabel" style="color:#50d870; font-size:13px; font-weight:700; margin-bottom:8px;">Selected Files (0):</div>
+                    <ul id="fileNamesList" style="list-style:none; max-height:160px; overflow-y:auto; padding:0;"></ul>
+                </div>
+
+                <button type="submit" class="btn">Upload &amp; Rank Candidates</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="table-title">
+                Ranked Candidates
+                <span class="count">{{ candidate_scores|length }}</span>
+            </div>
+            {% if candidate_scores %}
+            <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Experience</th>
+                        <th>Score</th>
+                        <th>Matched Skills</th>
+                        <th>Missing Skills</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in candidate_scores %}
+                    <tr>
+                        <td>
+                            <span class="rank-badge {% if item.rank == 1 %}rank-1{% elif item.rank == 2 %}rank-2{% elif item.rank == 3 %}rank-3{% else %}rank-other{% endif %}">
+                                {{ item.rank }}
+                            </span>
+                        </td>
+                        <td><strong style="color:#fff;">{{ item.candidate.name }}</strong></td>
+                        <td style="color:#a0a0b0;">{{ item.candidate.email }}</td>
+                        <td>
+                            <span class="level-badge level-{{ item.candidate.experience_level }}">
+                                {{ item.candidate.experience_level }} ({{ item.candidate.experience_years }}y)
+                            </span>
+                        </td>
+                        <td>
+                            {% if item.score %}
+                                <div class="score-bar">
+                                    <div class="score-fill {% if item.score.matching_score >= 75 %}score-high{% elif item.score.matching_score >= 50 %}score-mid{% else %}score-low{% endif %}" style="width: {{ item.score.matching_score }}%;">
+                                        {{ item.score.matching_score }}%
+                                    </div>
+                                </div>
+                            {% else %}
+                                <span style="color:#606070;">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td class="skills-cell">
+                            {% for skill in item.matched_list %}
+                                <span class="skill-tag">{{ skill }}</span>
+                            {% endfor %}
+                        </td>
+                        <td class="skills-cell">
+                            {% for skill in item.missing_list %}
+                                <span class="missing-tag">{{ skill }}</span>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            <a href="{% url 'candidate_detail' item.candidate.id %}" class="detail-link">View &#8594;</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+            {% else %}
+                <div class="no-candidates">
+                    <div class="emoji">&#128269;</div>
+                    <p>No candidates yet. Upload a resume to get started!</p>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <script>
+        var fileInput = document.getElementById('fileInput');
+        var uploadText = document.querySelector('.upload-text');
+        var fileListBox = document.getElementById('fileListBox');
+        var fileCountLabel = document.getElementById('fileCountLabel');
+        var fileNamesList = document.getElementById('fileNamesList');
+
+        function renderSelectedFiles(files) {
+            fileNamesList.innerHTML = '';
+            if (files && files.length > 0) {
+                uploadText.textContent = files.length + ' file(s) selected';
+                uploadText.style.color = '#00d4ff';
+                fileListBox.style.display = 'block';
+                fileCountLabel.textContent = 'Selected Files (' + files.length + '):';
+                for (var i = 0; i < files.length; i++) {
+                    var li = document.createElement('li');
+                    li.style.cssText = 'background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); padding:8px 12px; border-radius:8px; margin-bottom:6px; font-size:13px; color:#d0d0e0;';
+                    li.textContent = '📄 ' + files[i].name;
+                    fileNamesList.appendChild(li);
+                }
+            } else {
+                uploadText.textContent = 'Click to choose files or drag & drop';
+                uploadText.style.color = '#c0c0d0';
+                fileListBox.style.display = 'none';
+            }
+        }
+
+        fileInput.addEventListener('change', function(e) {
+            renderSelectedFiles(e.target.files);
+        });
+
+        var fileZone = document.querySelector('.file-zone');
+        fileZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            fileZone.style.borderColor = '#00d4ff';
+            fileZone.style.background = 'rgba(0, 212, 255, 0.1)';
+        });
+        fileZone.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            fileZone.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+            fileZone.style.background = 'rgba(255, 255, 255, 0.03)';
+        });
+        fileZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            fileZone.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+            fileZone.style.background = 'rgba(255, 255, 255, 0.03)';
+            var files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                renderSelectedFiles(files);
+            }
+        });
+    </script>
+
+</body>
+</html>

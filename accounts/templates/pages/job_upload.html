@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Job</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Particles */
+        .particles { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+        .particle { position: absolute; width: 4px; height: 4px; background: rgba(0, 212, 255, 0.3); border-radius: 50%; animation: float 15s infinite linear; }
+        .particle:nth-child(1) { left: 10%; animation-delay: 0s; animation-duration: 12s; }
+        .particle:nth-child(2) { left: 25%; animation-delay: 2s; animation-duration: 18s; width: 6px; height: 6px; }
+        .particle:nth-child(3) { left: 40%; animation-delay: 4s; animation-duration: 14s; }
+        .particle:nth-child(4) { left: 55%; animation-delay: 1s; animation-duration: 20s; width: 3px; height: 3px; }
+        .particle:nth-child(5) { left: 70%; animation-delay: 3s; animation-duration: 16s; }
+        .particle:nth-child(6) { left: 85%; animation-delay: 5s; animation-duration: 13s; width: 5px; height: 5px; }
+        .particle:nth-child(7) { left: 15%; animation-delay: 6s; animation-duration: 17s; }
+        .particle:nth-child(8) { left: 60%; animation-delay: 7s; animation-duration: 19s; width: 3px; height: 3px; }
+        .particle:nth-child(9) { left: 90%; animation-delay: 2s; animation-duration: 15s; }
+        .particle:nth-child(10) { left: 35%; animation-delay: 8s; animation-duration: 21s; width: 6px; height: 6px; }
+        @keyframes float {
+            0% { bottom: -10px; opacity: 0; transform: translateX(0); }
+            10% { opacity: 1; } 90% { opacity: 1; }
+            100% { bottom: 110%; opacity: 0; transform: translateX(20px); }
+        }
+
+        /* Orbs */
+        .orb { position: absolute; border-radius: 50%; filter: blur(60px); z-index: 0; animation: pulse 4s infinite ease-in-out; }
+        .orb-1 { width: 300px; height: 300px; background: rgba(0, 212, 255, 0.08); top: -100px; left: -100px; }
+        .orb-2 { width: 250px; height: 250px; background: rgba(118, 75, 162, 0.1); bottom: -80px; right: -80px; animation-delay: 2s; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 0.8; } }
+
+        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes inputPop { 0% { transform: scale(0.95) translateX(-10px); opacity: 0; } 100% { transform: scale(1) translateX(0); opacity: 1; } }
+        @keyframes shimmerText { 0%, 100% { text-shadow: 0 0 15px rgba(0, 212, 255, 0.3); } 50% { text-shadow: 0 0 30px rgba(0, 212, 255, 0.6); } }
+
+        .job-box {
+            position: relative;
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            width: 500px;
+            z-index: 1;
+            animation: fadeInScale 0.6s ease-out;
+            transition: border-color 0.3s;
+        }
+        .job-box:hover { border-color: rgba(0, 212, 255, 0.2); }
+
+        .job-box h1 {
+            font-size: 28px;
+            color: #00d4ff;
+            margin-bottom: 30px;
+            text-align: center;
+            animation: shimmerText 3s infinite ease-in-out;
+        }
+
+        .input-box { position: relative; width: 100%; margin-bottom: 20px; animation: inputPop 0.4s ease-out both; }
+        .input-box:nth-child(1) { animation-delay: 0.1s; }
+        .input-box:nth-child(2) { animation-delay: 0.2s; }
+
+        .job-box input,
+        .job-box textarea {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-size: 14px;
+            color: #fff;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .job-box input::placeholder,
+        .job-box textarea::placeholder { color: #606070; transition: all 0.3s; }
+
+        .job-box input:focus,
+        .job-box textarea:focus {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.15), 0 0 25px rgba(0, 212, 255, 0.15);
+            transform: translateY(-2px) scale(1.02);
+        }
+        .job-box input:focus::placeholder,
+        .job-box textarea:focus::placeholder { color: #00d4ff; opacity: 0.6; transform: translateX(5px); }
+
+        .input-box::after {
+            content: ''; position: absolute; bottom: 0; left: 50%;
+            width: 0; height: 2px; background: linear-gradient(90deg, #00d4ff, #0f3460);
+            border-radius: 2px; transition: all 0.3s ease; transform: translateX(-50%);
+        }
+        .input-box:focus-within::after { width: 80%; }
+
+        .job-box textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #00d4ff 0%, #0f3460 100%);
+            background-size: 200% 200%;
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 10px;
+            font-size: 15px;
+            cursor: pointer;
+            font-weight: 700;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            text-align: center;
+            display: block;
+            animation: slideInLeft 0.5s ease-out 0.4s both;
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.4);
+            background-position: 100% 100%;
+        }
+        .btn:active { transform: translateY(0); }
+
+        .nav-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #00d4ff;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 8px 16px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 8px;
+            transition: all 0.3s;
+            animation: fadeInScale 0.4s ease-out 0.5s both;
+        }
+        .nav-link:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: #00d4ff;
+            transform: translateX(-3px);
+        }
+
+        .messages { margin-bottom: 20px; }
+        .messages p {
+            padding: 10px 20px; border-radius: 8px; margin-bottom: 5px;
+            font-size: 13px; font-weight: 500; text-align: center;
+            animation: fadeInScale 0.4s ease-out;
+        }
+        .messages .success { background: rgba(40, 167, 69, 0.15); color: #50d870; border: 1px solid rgba(40, 167, 69, 0.3); }
+        .messages .error { background: rgba(220, 53, 69, 0.15); color: #ff6b6b; border: 1px solid rgba(220, 53, 69, 0.3); }
+    </style>
+</head>
+<body>
+
+    <div class="particles">
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
+    </div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="job-box">
+
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <p class="{{ message.tags }}">{{ message }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <h1>Create New Job</h1>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="input-box">
+                <input type="text" name="title" placeholder="Job Title (e.g. Python Developer)" required>
+            </div>
+            <div class="input-box">
+                <textarea name="description" placeholder="Job Description - skills, experience, requirements..." required></textarea>
+            </div>
+            <button type="submit" class="btn">Create Job &amp; Add Candidates</button>
+        </form>
+        <a href="{% url 'home' %}" class="nav-link">&#8592; Back to Home</a>
+    </div>
+
+</body>
+</html>

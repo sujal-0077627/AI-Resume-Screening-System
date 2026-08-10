@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candidate Details</title>
+    {% load static %}
+    {% load custom_filters %}
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .particles { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+        .particle { position: absolute; width: 4px; height: 4px; background: rgba(0, 212, 255, 0.3); border-radius: 50%; animation: float 15s infinite linear; }
+        .particle:nth-child(1) { left: 10%; animation-delay: 0s; animation-duration: 12s; }
+        .particle:nth-child(2) { left: 25%; animation-delay: 2s; animation-duration: 18s; width: 6px; height: 6px; }
+        .particle:nth-child(3) { left: 40%; animation-delay: 4s; animation-duration: 14s; }
+        .particle:nth-child(4) { left: 55%; animation-delay: 1s; animation-duration: 20s; width: 3px; height: 3px; }
+        .particle:nth-child(5) { left: 70%; animation-delay: 3s; animation-duration: 16s; }
+        .particle:nth-child(6) { left: 85%; animation-delay: 5s; animation-duration: 13s; width: 5px; height: 5px; }
+        .particle:nth-child(7) { left: 15%; animation-delay: 6s; animation-duration: 17s; }
+        .particle:nth-child(8) { left: 60%; animation-delay: 7s; animation-duration: 19s; width: 3px; height: 3px; }
+        .particle:nth-child(9) { left: 90%; animation-delay: 2s; animation-duration: 15s; }
+        .particle:nth-child(10) { left: 35%; animation-delay: 8s; animation-duration: 21s; width: 6px; height: 6px; }
+        @keyframes float {
+            0% { bottom: -10px; opacity: 0; transform: translateX(0); }
+            10% { opacity: 1; } 90% { opacity: 1; }
+            100% { bottom: 110%; opacity: 0; transform: translateX(20px); }
+        }
+
+        .orb { position: absolute; border-radius: 50%; filter: blur(60px); z-index: 0; animation: pulse 4s infinite ease-in-out; }
+        .orb-1 { width: 300px; height: 300px; background: rgba(0, 212, 255, 0.08); top: -100px; left: -100px; }
+        .orb-2 { width: 250px; height: 250px; background: rgba(118, 75, 162, 0.1); bottom: -80px; right: -80px; animation-delay: 2s; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 0.8; } }
+
+        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shimmerText { 0%, 100% { text-shadow: 0 0 15px rgba(0, 212, 255, 0.3); } 50% { text-shadow: 0 0 30px rgba(0, 212, 255, 0.6); } }
+        @keyframes scorePulse { 0%, 100% { box-shadow: 0 0 20px rgba(0, 212, 255, 0.3); } 50% { box-shadow: 0 0 40px rgba(0, 212, 255, 0.5); } }
+
+        .detail-container { max-width: 700px; margin: 0 auto; position: relative; z-index: 1; }
+
+        .detail-card {
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            margin-bottom: 25px;
+            animation: fadeInScale 0.6s ease-out;
+            transition: border-color 0.3s;
+        }
+        .detail-card:hover { border-color: rgba(0, 212, 255, 0.2); }
+
+        .header-section { text-align: center; margin-bottom: 30px; animation: slideInUp 0.5s ease-out; }
+        .header-section h1 {
+            font-size: 28px; color: #00d4ff; margin-bottom: 5px;
+            animation: shimmerText 3s infinite ease-in-out;
+        }
+        .header-section p { color: #a0a0b0; font-size: 15px; }
+        .header-section p span { color: #00d4ff; font-weight: 600; }
+
+        .score-circle {
+            width: 130px; height: 130px; border-radius: 50%;
+            background: conic-gradient(#00d4ff {{ score.matching_score|default:"0" }}%, rgba(255,255,255,0.08) 0);
+            margin: 25px auto;
+            display: flex; align-items: center; justify-content: center;
+            animation: scorePulse 3s infinite ease-in-out;
+        }
+        .score-circle-inner {
+            width: 100px; height: 100px; border-radius: 50%;
+            background: #16213e;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border: 2px solid rgba(0, 212, 255, 0.1);
+        }
+        .score-circle-inner .num {
+            font-size: 28px; font-weight: 700; color: #00d4ff;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        }
+        .score-circle-inner .lbl {
+            font-size: 11px; color: #a0a0b0;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        .info-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 15px; margin-bottom: 25px;
+            animation: slideInUp 0.5s ease-out 0.2s both;
+        }
+        .info-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 15px; border-radius: 12px;
+            transition: all 0.3s;
+        }
+        .info-item:hover {
+            border-color: rgba(0, 212, 255, 0.2);
+            background: rgba(0, 212, 255, 0.05);
+            transform: translateY(-2px);
+        }
+        .info-item label {
+            display: block; font-size: 11px; color: #606070;
+            margin-bottom: 4px; text-transform: uppercase;
+            letter-spacing: 0.5px; font-weight: 600;
+        }
+        .info-item span { font-size: 15px; font-weight: 600; color: #d0d0e0; }
+
+        .skills-section { margin-top: 20px; animation: slideInUp 0.5s ease-out 0.3s both; }
+        .skills-section h3 {
+            font-size: 15px; color: #fff; margin-bottom: 12px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .skills-section h3 .icon { font-size: 18px; }
+        .skill-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tag {
+            padding: 5px 14px; border-radius: 20px;
+            font-size: 13px; font-weight: 500; transition: all 0.2s;
+        }
+        .tag.matched {
+            background: rgba(40, 167, 69, 0.15); color: #50d870;
+            border: 1px solid rgba(40, 167, 69, 0.3);
+        }
+        .tag.matched:hover { background: rgba(40, 167, 69, 0.3); transform: scale(1.05); }
+        .tag.missing {
+            background: rgba(220, 53, 69, 0.15); color: #ff6b6b;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+        .tag.missing:hover { background: rgba(220, 53, 69, 0.3); transform: scale(1.05); }
+
+        .explanation-box {
+            background: rgba(0, 212, 255, 0.05);
+            padding: 15px; border-radius: 12px;
+            margin-top: 20px; border-left: 4px solid #00d4ff;
+            animation: slideInUp 0.5s ease-out 0.4s both;
+        }
+        .explanation-box small { color: #a0a0b0; line-height: 1.6; font-size: 13px; }
+
+        .export-actions {
+            display: flex; gap: 12px; margin-top: 20px;
+            animation: slideInUp 0.5s ease-out 0.45s both;
+        }
+        .export-btn {
+            flex: 1; text-align: center; padding: 12px;
+            background: rgba(0, 212, 255, 0.1); color: #00d4ff;
+            border: 1px solid rgba(0, 212, 255, 0.3); text-decoration: none;
+            border-radius: 10px; font-weight: 600; font-size: 13px;
+            transition: all 0.3s;
+        }
+        .export-btn:hover {
+            background: rgba(0, 212, 255, 0.25); transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.2);
+        }
+        .export-btn.excel {
+            background: rgba(32, 191, 107, 0.1); color: #20bf6b;
+            border-color: rgba(32, 191, 107, 0.3);
+        }
+        .export-btn.excel:hover {
+            background: rgba(32, 191, 107, 0.25);
+            box-shadow: 0 5px 15px rgba(32, 191, 107, 0.2);
+        }
+
+        .resume-btn {
+            display: block; text-align: center; padding: 14px;
+            background: linear-gradient(135deg, #00d4ff 0%, #0f3460 100%);
+            background-size: 200% 200%; color: #fff;
+            text-decoration: none; border-radius: 12px;
+            font-weight: 700; margin-top: 15px; transition: all 0.3s;
+            text-transform: uppercase; letter-spacing: 1px; font-size: 14px;
+            animation: slideInUp 0.5s ease-out 0.5s both;
+        }
+        .resume-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.4);
+            background-position: 100% 100%;
+        }
+
+        .nav-link {
+            display: block; text-align: center; margin-top: 20px;
+            color: #a0a0b0; text-decoration: none; font-size: 14px;
+            font-weight: 600; padding: 10px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px; transition: all 0.3s;
+            animation: slideInUp 0.5s ease-out 0.6s both;
+        }
+        .nav-link:hover {
+            color: #00d4ff; border-color: rgba(0, 212, 255, 0.3);
+            background: rgba(0, 212, 255, 0.05); transform: translateX(-3px);
+        }
+
+        .no-score { text-align: center; color: #606070; font-style: italic; padding: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="particles">
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
+    </div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="detail-container">
+        <div class="detail-card">
+
+            <div class="header-section">
+                <h1>{{ candidate.name }}</h1>
+                <p>Applied for: <span>{{ candidate.applied_job.title }}</span></p>
+            </div>
+
+            {% if score %}
+            <div class="score-circle">
+                <div class="score-circle-inner">
+                    <span class="num">{{ score.matching_score }}%</span>
+                    <span class="lbl">Match</span>
+                </div>
+            </div>
+            {% else %}
+            <p class="no-score">Score not calculated yet.</p>
+            {% endif %}
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Email</label>
+                    <span>{{ candidate.email }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Phone</label>
+                    <span>{% if candidate.phone %}{{ candidate.phone }}{% else %}Not provided{% endif %}</span>
+                </div>
+                <div class="info-item">
+                    <label>Experience</label>
+                    <span>{{ candidate.experience_years }} years</span>
+                </div>
+                <div class="info-item">
+                    <label>Level</label>
+                    <span>{{ candidate.experience_level }}</span>
+                </div>
+            </div>
+
+            {% if score %}
+            <div class="skills-section">
+                <h3><span class="icon">&#9989;</span> Matched Skills</h3>
+                <div class="skill-tags">
+                    {% for skill in score.matched_skills|split:", " %}
+                        <span class="tag matched">{{ skill }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="skills-section">
+                <h3><span class="icon">&#10060;</span> Missing Skills</h3>
+                <div class="skill-tags">
+                    {% for skill in score.missing_skills|split:", " %}
+                        <span class="tag missing">{{ skill }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="explanation-box">
+                <small>{{ score.explanation }}</small>
+            </div>
+            {% endif %}
+
+            <div class="export-actions">
+                <a href="{% url 'export_csv' candidate.applied_job.id %}" class="export-btn">&#128190; Export CSV</a>
+                <a href="{% url 'export_excel' candidate.applied_job.id %}" class="export-btn excel">&#128202; Export Excel</a>
+            </div>
+
+            <a href="{{ candidate.resume_path.url }}" class="resume-btn" target="_blank">&#128196; View Resume</a>
+
+        </div>
+
+        <a href="{% url 'candidate_upload' job_id=candidate.applied_job.id %}" class="nav-link">&#8592; Back to Candidates</a>
+    </div>
+
+</body>
+</html>
