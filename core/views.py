@@ -1,7 +1,9 @@
+import os
 import re
 import secrets
 from datetime import timedelta
 
+from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.cache import cache
@@ -227,13 +229,16 @@ def register_view(request):
             messages.error(request, "Password must be at least 6 characters.")
             return render(request, 'register.html')
 
-        if User.objects.filter(username=username).exists():
+        if User.objects.filter(username=username, is_verified=True).exists():
             messages.error(request, f"Username '{username}' is already taken.")
             return render(request, 'register.html')
 
-        if User.objects.filter(email=email).exists():
+        if User.objects.filter(email=email, is_verified=True).exists():
             messages.error(request, f"Email '{email}' is already registered.")
             return render(request, 'register.html')
+
+        # Clean up any incomplete / unverified registrations for this username or email
+        User.objects.filter(Q(username=username) | Q(email=email), is_verified=False).delete()
 
         # Create user with bcrypt password
         user = User(username=username, email=email, full_name=username)
@@ -249,13 +254,12 @@ def register_view(request):
         request.session['pending_user_id'] = user.id
         request.session['pending_email'] = email
 
-        smtp_configured = bool(
-            os.environ.get('SMTP_HOST') and os.environ.get('SMTP_USER') and os.environ.get('SMTP_PASSWORD')
-        )
-        if smtp_configured and sent:
+        if sent:
+            request.session.pop('demo_otp', None)
             messages.success(request, f"Account created! OTP sent to {email}. Please check your inbox.")
         else:
-            messages.info(request, f"Account created! [Verification OTP: {otp}] Please enter it below to verify.")
+            request.session['demo_otp'] = otp
+            messages.info(request, f"Account created! Verification OTP: {otp}")
         return redirect('verify_otp')
 
     return render(request, 'register.html')
@@ -269,25 +273,35 @@ def verify_otp_view(request):
         return redirect('register')
 
     user = get_object_or_404(User, id=user_id)
+    demo_otp = request.session.get('demo_otp')
 
     if request.method == 'POST':
         otp = request.POST.get('otp', '').strip()
 
         if not otp:
             messages.error(request, "Please enter the OTP.")
-            return render(request, 'verify_otp.html', {'email': request.session.get('pending_email')})
+            return render(request, 'verify_otp.html', {
+                'email': request.session.get('pending_email'),
+                'demo_otp': demo_otp,
+            })
 
         # Check OTP rate-limiting (max 5 invalid attempts)
         attempts_key = f'otp_attempts_{user.id}'
         attempts = cache.get(attempts_key, 0)
         if attempts >= 5:
             messages.error(request, "Too many invalid OTP attempts. Please register again.")
-            return render(request, 'verify_otp.html', {'email': request.session.get('pending_email')})
+            return render(request, 'verify_otp.html', {
+                'email': request.session.get('pending_email'),
+                'demo_otp': demo_otp,
+            })
 
         # Check OTP expiration (10 minutes)
         if user.otp_created_at and timezone.now() > user.otp_created_at + timedelta(minutes=10):
             messages.error(request, "OTP has expired. Please register again to get a new OTP.")
-            return render(request, 'verify_otp.html', {'email': request.session.get('pending_email')})
+            return render(request, 'verify_otp.html', {
+                'email': request.session.get('pending_email'),
+                'demo_otp': demo_otp,
+            })
 
         if user.verify_otp(otp):
             user.is_verified = True
@@ -297,15 +311,22 @@ def verify_otp_view(request):
             cache.delete(attempts_key)
             request.session.pop('pending_user_id', None)
             request.session.pop('pending_email', None)
+            request.session.pop('demo_otp', None)
             messages.success(request, "Email verified successfully! Please login.")
             return redirect('login')
         else:
             attempts += 1
             cache.set(attempts_key, attempts, timeout=600)
             messages.error(request, f"Invalid OTP. {5 - attempts} attempt(s) remaining.")
-            return render(request, 'verify_otp.html', {'email': request.session.get('pending_email')})
+            return render(request, 'verify_otp.html', {
+                'email': request.session.get('pending_email'),
+                'demo_otp': demo_otp,
+            })
 
-    return render(request, 'verify_otp.html', {'email': request.session.get('pending_email')})
+    return render(request, 'verify_otp.html', {
+        'email': request.session.get('pending_email'),
+        'demo_otp': demo_otp,
+    })
 
 
 def logout_view(request):

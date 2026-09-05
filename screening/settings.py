@@ -148,9 +148,37 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024
 
 # Email / SMTP Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.environ.get('SMTP_HOST', '')
-EMAIL_PORT = int(os.environ.get('SMTP_PORT', '587'))
-EMAIL_HOST_USER = os.environ.get('SMTP_USER', '')
-EMAIL_HOST_PASSWORD = os.environ.get('SMTP_PASSWORD', '')
+EMAIL_HOST = os.environ.get('SMTP_HOST', '').strip()
+_smtp_port_raw = os.environ.get('SMTP_PORT', '').strip()
+EMAIL_PORT = int(_smtp_port_raw) if _smtp_port_raw.isdigit() else 587
+EMAIL_HOST_USER = os.environ.get('SMTP_USER', '').strip()
+EMAIL_HOST_PASSWORD = os.environ.get('SMTP_PASSWORD', '').strip()
 EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = os.environ.get('SMTP_USER', '')
+DEFAULT_FROM_EMAIL = os.environ.get('SMTP_USER', '').strip()
+
+# Logging: Ensure unhandled exceptions and server errors are logged to stdout
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    },
+}

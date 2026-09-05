@@ -45,13 +45,13 @@ def send_otp_email(email, otp):
         otp (str): OTP code.
 
     Returns:
-        bool: True if sent successfully, False otherwise.
+        bool: True if sent successfully via SMTP, False otherwise.
     """
-    # Check if SMTP is configured
-    smtp_host = os.environ.get('SMTP_HOST', '')
-    smtp_port = int(os.environ.get('SMTP_PORT', '587'))
-    smtp_user = os.environ.get('SMTP_USER', '')
-    smtp_password = os.environ.get('SMTP_PASSWORD', '')
+    smtp_host = os.environ.get('SMTP_HOST', '').strip()
+    raw_port = os.environ.get('SMTP_PORT', '').strip()
+    smtp_port = int(raw_port) if raw_port.isdigit() else 587
+    smtp_user = os.environ.get('SMTP_USER', '').strip()
+    smtp_password = os.environ.get('SMTP_PASSWORD', '').strip()
 
     if smtp_host and smtp_user and smtp_password:
         try:
@@ -72,7 +72,7 @@ def send_otp_email(email, otp):
             """
             msg.attach(MIMEText(html, 'html'))
 
-            with smtplib.SMTP(smtp_host, smtp_port) as server:
+            with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
                 server.starttls()
                 server.login(smtp_user, smtp_password)
                 server.send_message(msg)
@@ -83,8 +83,8 @@ def send_otp_email(email, otp):
 
     # Fallback: print OTP to console (DEMO mode)
     print("\n" + "=" * 50)
-    print("📧 DEMO MODE: OTP Email")
+    print("[DEMO MODE: OTP Email]")
     print(f"To: {email}")
     print(f"Your OTP is: {otp}")
     print("=" * 50 + "\n")
-    return True
+    return False

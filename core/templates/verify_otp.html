@@ -24,10 +24,18 @@
         </div>
         {% endif %}
 
-        <div class="alert alert-info text-center">
-            <i class="fas fa-info-circle me-1"></i>
-            Demo mode me OTP server console me print hota hai. SMTP configure karne ke baad email pe aayega.
+        {% if demo_otp %}
+        <div class="alert alert-warning text-center" style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #fbbf24; border-radius: 8px; padding: 12px; margin-bottom: 20px;">
+            <div style="font-weight: 600; margin-bottom: 4px;"><i class="fas fa-key me-1"></i> Demo Verification Code:</div>
+            <div style="font-size: 1.5rem; letter-spacing: 4px; font-weight: 800; color: #ffffff; background: rgba(0,0,0,0.35); display: inline-block; padding: 4px 16px; border-radius: 6px; font-family: monospace;">{{ demo_otp }}</div>
+            <div style="font-size: 0.8rem; margin-top: 6px; opacity: 0.9;">Enter this 6-digit code below to verify your account.</div>
         </div>
+        {% else %}
+        <div class="alert alert-info text-center">
+            <i class="fas fa-envelope me-1"></i>
+            Please check your email inbox for the 6-digit verification code.
+        </div>
+        {% endif %}
 
         <form method="post" action="{% url 'verify_otp' %}" id="otpForm">
             {% csrf_token %}
