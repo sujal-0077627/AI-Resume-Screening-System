@@ -33,5 +33,4 @@ RUN python manage.py collectstatic --noinput
 
 EXPOSE 10000 8000 7860
 
-# 1 Worker + 2 Threads: Keeps RAM usage under ~250MB (perfect for Render 512MB free tier)
-CMD ["sh", "-c", "python manage.py migrate && python manage.py create_admin && gunicorn screening.wsgi:application --bind 0.0.0.0:${PORT:-10000} --workers 1 --threads 2 --timeout 120"]
+CMD ["sh", "-c", "python manage.py migrate && gunicorn screening.wsgi:application --bind 0.0.0.0:${PORT:-10000} --workers 1 --threads 2 --timeout 120"]

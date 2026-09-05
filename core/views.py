@@ -243,13 +243,19 @@ def register_view(request):
         otp = generate_otp(6)
         user.set_otp(otp)
         user.save()
-        send_otp_email(email, otp)
+        sent = send_otp_email(email, otp)
 
         # Store in session for verification
         request.session['pending_user_id'] = user.id
         request.session['pending_email'] = email
 
-        messages.success(request, f"Account created! OTP sent to {email}. Please verify.")
+        smtp_configured = bool(
+            os.environ.get('SMTP_HOST') and os.environ.get('SMTP_USER') and os.environ.get('SMTP_PASSWORD')
+        )
+        if smtp_configured and sent:
+            messages.success(request, f"Account created! OTP sent to {email}. Please check your inbox.")
+        else:
+            messages.info(request, f"Account created! [Verification OTP: {otp}] Please enter it below to verify.")
         return redirect('verify_otp')
 
     return render(request, 'register.html')
