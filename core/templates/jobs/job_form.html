@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Post Job - AI Resume Screening{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card card-custom animate-fade-up cinematic-shadow hud-overlay spotlight-behind">
+                <div class="card-header card-header-custom">
+                    <h4 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Post New Job Role</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        <!-- Title & Company -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-7">
+                                <label class="form-label fw-semibold"><i class="fas fa-tag me-1"></i>Job Title</label>
+                                <input type="text" name="title" class="form-control form-control-lg" placeholder="e.g. Full Stack Python / Django Developer" required>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label fw-semibold"><i class="fas fa-building me-1"></i>Company / Org Name</label>
+                                <input type="text" name="company_name" class="form-control form-control-lg" placeholder="e.g. TechCorp Solutions" value="TechCorp">
+                            </div>
+                        </div>
+
+                        <!-- Cutoff & Experience -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold"><i class="fas fa-sliders-h me-1"></i>Shortlisting Passing Score (%)</label>
+                                <input type="number" name="cutoff_score" class="form-control" value="75" min="30" max="95" required>
+                                <div class="form-text">Candidates with match score &ge; this cutoff are auto-marked <strong>Shortlisted</strong>.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold"><i class="fas fa-history me-1"></i>Minimum Experience (Years)</label>
+                                <input type="number" name="experience_required" class="form-control" value="0" min="0" max="30">
+                                <div class="form-text">0 indicates any experience level or fresher-friendly.</div>
+                            </div>
+                        </div>
+
+                        <!-- Description & Skills -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold"><i class="fas fa-align-left me-1"></i>Job Description & Required Skills</label>
+                            <textarea name="description" class="form-control" rows="8" placeholder="Describe the role, responsibilities, and requirements. Include a 'Skills:' section with comma-separated skills, e.g.&#10;&#10;We are looking for a Senior Python Developer to build scalable backend systems.&#10;&#10;Responsibilities:&#10;- Design REST APIs & microservices&#10;- Optimize PostgreSQL queries&#10;&#10;Skills: Python, Django, PostgreSQL, Docker, Redis, REST API" required></textarea>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Include a <strong>Skills:</strong> section with comma-separated skills (e.g. <em>Skills: Python, Django, SQL, React</em>) for deep keyword and semantic matching.
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg flex-grow-1 glow-border">
+                                <i class="fas fa-check me-2"></i>Create Job Posting
+                            </button>
+                            <a href="{% url 'job_list' %}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

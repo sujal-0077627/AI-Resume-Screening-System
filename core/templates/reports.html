@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Reports - AI Resume Screening{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 animate-fade-up">
+        <div class="depth-1">
+            <h1 class="page-title">Reports</h1>
+            <p class="text-muted mb-0">Download screening data as Excel or CSV.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'export_excel' %}" class="btn btn-success btn-lg glow-border">
+                <i class="fas fa-file-excel me-2"></i>Download Excel
+            </a>
+            <a href="{% url 'export_csv' %}" class="btn btn-info btn-lg glow-border">
+                <i class="fas fa-file-csv me-2"></i>Download CSV
+            </a>
+        </div>
+    </div>
+
+    <div class="card card-custom animate-fade-up cinematic-shadow hud-overlay">
+        <div class="card-header card-header-custom">
+            <h5 class="mb-0"><i class="fas fa-table me-2"></i>Screening Data ({{ scores.count }} records)</h5>
+        </div>
+        <div class="card-body p-0">
+            {% if scores %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Candidate</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Job</th>
+                            <th>Overall %</th>
+                            <th>TF-IDF %</th>
+                            <th>Semantic %</th>
+                            <th>Status</th>
+                            <th>Email Sent</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for score in scores %}
+                        <tr>
+                            <td class="fw-semibold">{{ score.candidate.name|default:"N/A" }}</td>
+                            <td>{{ score.candidate.email|default:"N/A" }}</td>
+                            <td>{{ score.candidate.phone|default:"N/A" }}</td>
+                            <td>{{ score.job.title }}</td>
+                            <td><span class="fw-bold">{{ score.overall_score }}%</span></td>
+                            <td>{{ score.tfidf_score }}%</td>
+                            <td>{{ score.semantic_score }}%</td>
+                            <td>
+                                <span class="badge {% if score.status == 'selected' %}bg-success{% elif score.status == 'rejected' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                    {{ score.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if score.email_sent %}
+                                <i class="fas fa-check-circle text-success"></i>
+                                {% else %}
+                                <i class="fas fa-times-circle text-muted"></i>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                <p class="text-muted">No screening data available yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

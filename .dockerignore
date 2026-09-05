@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# Django runtime (never copy local db/media/static into the image)
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Secrets
+.env
+.env.local
+.env.*.local
+
+# Tests / junk
+test_app.py
+test_auth_flow.py
+test_lockout.py
+*.log
+.git/
+.vscode/
+.idea/
+.pytest_cache/

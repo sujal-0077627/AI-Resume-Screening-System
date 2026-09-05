@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Verify OTP - AI Resume Screening{% endblock %}
+
+{% block content %}
+<div class="login-wrapper">
+    <div class="login-card animate-fade-up glow-border cinematic-shadow hud-overlay spotlight-behind" style="max-width: 420px;">
+        <div class="login-header">
+            <div class="login-logo"><i class="fas fa-shield-alt"></i></div>
+            <h1 class="login-title">Email Verification</h1>
+            <p class="login-subtitle">
+                OTP sent to <strong>{{ email|default:"your email" }}</strong>
+            </p>
+        </div>
+
+        {% if messages %}
+        <div class="mb-3">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'danger' }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle me-1"></i>
+            Demo mode me OTP server console me print hota hai. SMTP configure karne ke baad email pe aayega.
+        </div>
+
+        <form method="post" action="{% url 'verify_otp' %}" id="otpForm">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label class="form-label text-center d-block"><i class="fas fa-key me-1"></i>Enter OTP</label>
+                <div class="d-flex justify-content-center gap-2 otp-container">
+                    <input type="text" class="form-control otp-input text-center" maxlength="1" placeholder="0" inputmode="numeric" pattern="[0-9]" required>
+                    <input type="text" class="form-control otp-input text-center" maxlength="1" placeholder="0" inputmode="numeric" pattern="[0-9]" required>
+                    <input type="text" class="form-control otp-input text-center" maxlength="1" placeholder="0" inputmode="numeric" pattern="[0-9]" required>
+                    <input type="text" class="form-control otp-input text-center" maxlength="1" placeholder="0" inputmode="numeric" pattern="[0-9]" required>
+                    <input type="text" class="form-control otp-input text-center" maxlength="1" placeholder="0" inputmode="numeric" pattern="[0-9]" required>
+                    <input type="text" class="form-control otp-input text-center" maxlength="1" placeholder="0" inputmode="numeric" pattern="[0-9]" required>
+                </div>
+                <input type="hidden" name="otp" id="otpHidden">
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg w-100 login-btn">
+                <i class="fas fa-check-circle me-2"></i>Verify & Continue
+            </button>
+        </form>
+
+        <div class="text-center mt-3">
+            <small class="text-muted">
+                Didn't receive OTP? <a href="{% url 'register' %}" class="text-primary">Register again</a>
+            </small>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('.otp-input');
+    const hidden = document.getElementById('otpHidden');
+    const form = document.getElementById('otpForm');
+
+    // Auto-focus next input on typing
+    inputs.forEach((input, index) => {
+        input.addEventListener('input', function() {
+            // Only allow digits
+            this.value = this.value.replace(/\D/g, '');
+            if (this.value.length === 1 && index < inputs.length - 1) {
+                inputs[index + 1].focus();
+            }
+            // Combine values into hidden field
+            hidden.value = Array.from(inputs).map(i => i.value).join('');
+            // Auto-submit when all 6 digits entered
+            if (hidden.value.length === 6) {
+                form.submit();
+            }
+        });
+
+        // Handle backspace
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace' && this.value === '' && index > 0) {
+                inputs[index - 1].focus();
+            }
+        });
+
+        // Handle paste
+        input.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+            paste.split('').forEach((char, i) => {
+                if (i < inputs.length) {
+                    inputs[i].value = char;
+                }
+            });
+            hidden.value = paste.slice(0, 6);
+            if (hidden.value.length === 6) {
+                form.submit();
+            }
+        });
+    });
+
+    // First input focus
+    inputs[0].focus();
+});
+</script>
+{% endblock %}

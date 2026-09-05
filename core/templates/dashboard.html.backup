@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - AI Resume Screening{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Hero Section: Cinematic 3D Dashboard Header -->
+    <div class="dashboard-hero hud-overlay spotlight-behind glow-border cinematic-shadow mb-4 animate-fade-up">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div class="depth-2">
+                <h1 class="page-title mb-1">Dashboard</h1>
+                <p class="text-muted mb-0">Welcome back! Here's your screening overview.</p>
+            </div>
+            <a href="{% url 'candidate_upload' %}" class="btn btn-primary btn-lg glow-border">
+                <i class="fas fa-upload me-2"></i>Screen New Resume
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards with Animated Counters -->
+    <div class="row g-4 mb-4">
+        <div class="col-6 col-md-4 col-lg-3 reveal-on-scroll">
+            <a href="{% url 'job_list' %}" class="stat-card stat-card-link">
+                <div class="stat-icon bg-primary-soft"><i class="fas fa-briefcase"></i></div>
+                <div class="stat-value" data-count="{{ total_jobs }}">{{ total_jobs }}</div>
+                <div class="stat-label">Total Jobs</div>
+            </a>
+        </div>
+        <div class="col-6 col-md-4 col-lg-3 reveal-on-scroll" style="transition-delay: 0.05s">
+            <a href="{% url 'candidate_list' %}" class="stat-card stat-card-link">
+                <div class="stat-icon bg-info-soft"><i class="fas fa-users"></i></div>
+                <div class="stat-value" data-count="{{ total_candidates }}">{{ total_candidates }}</div>
+                <div class="stat-label">Candidates</div>
+            </a>
+        </div>
+        <div class="col-6 col-md-4 col-lg-3 reveal-on-scroll" style="transition-delay: 0.1s">
+            <a href="{% url 'reports' %}" class="stat-card stat-card-link">
+                <div class="stat-icon bg-success-soft"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-value" data-count="{{ selected }}">{{ selected }}</div>
+                <div class="stat-label">Selected</div>
+            </a>
+        </div>
+        <div class="col-6 col-md-4 col-lg-3 reveal-on-scroll" style="transition-delay: 0.15s">
+            <a href="{% url 'reports' %}" class="stat-card stat-card-link">
+                <div class="stat-icon bg-danger-soft"><i class="fas fa-times-circle"></i></div>
+                <div class="stat-value" data-count="{{ rejected }}">{{ rejected }}</div>
+                <div class="stat-label">Rejected</div>
+            </a>
+        </div>
+        <div class="col-6 col-md-4 col-lg-3 reveal-on-scroll" style="transition-delay: 0.2s">
+            <a href="{% url 'reports' %}" class="stat-card stat-card-link">
+                <div class="stat-icon bg-warning-soft"><i class="fas fa-chart-line"></i></div>
+                <div class="stat-value" data-count="{{ avg_score }}" data-suffix="%">{{ avg_score }}%</div>
+                <div class="stat-label">Avg Score</div>
+            </a>
+        </div>
+        <div class="col-6 col-md-4 col-lg-3 reveal-on-scroll" style="transition-delay: 0.25s">
+            <a href="{% url 'reports' %}" class="stat-card stat-card-link">
+                <div class="stat-icon bg-purple-soft"><i class="fas fa-file-alt"></i></div>
+                <div class="stat-value" data-count="{{ total_scores }}">{{ total_scores }}</div>
+                <div class="stat-label">Screened</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4 reveal-on-scroll">
+            <a href="{% url 'job_create' %}" class="action-card">
+                <div class="action-icon"><i class="fas fa-plus-circle"></i></div>
+                <div>
+                    <h5>Post a Job</h5>
+                    <p class="mb-0 text-muted">Create a new job posting with JD and required skills</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 reveal-on-scroll" style="transition-delay: 0.1s">
+            <a href="{% url 'candidate_upload' %}" class="action-card">
+                <div class="action-icon"><i class="fas fa-file-pdf"></i></div>
+                <div>
+                    <h5>Screen Resume</h5>
+                    <p class="mb-0 text-muted">Upload a PDF resume and get AI match score</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 reveal-on-scroll" style="transition-delay: 0.2s">
+            <a href="{% url 'reports' %}" class="action-card">
+                <div class="action-icon"><i class="fas fa-download"></i></div>
+                <div>
+                    <h5>Download Reports</h5>
+                    <p class="mb-0 text-muted">Export screening data to Excel or CSV</p>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Scores -->
+    <div class="card card-custom reveal-on-scroll cinematic-shadow" style="transition-delay: 0.2s">
+        <div class="card-header card-header-custom">
+            <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Recent Screening Results</h5>
+        </div>
+        <div class="card-body p-0">
+            {% if recent_scores %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Candidate</th>
+                            <th>Job</th>
+                            <th>Score</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for score in recent_scores %}
+                        <tr>
+                            <td class="fw-semibold">{{ score.candidate.name|default:"N/A" }}</td>
+                            <td>{{ score.job.title }}</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress score-progress" style="width: 80px;">
+                                        <div class="progress-bar {% if score.overall_score >= 70 %}bg-success{% elif score.overall_score >= 40 %}bg-warning{% else %}bg-danger{% endif %}"
+                                             style="width: {{ score.overall_score }}%"></div>
+                                    </div>
+                                    <span class="fw-bold">{{ score.overall_score }}%</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge {% if score.status == 'shortlisted' or score.status == 'selected' %}bg-success{% elif score.status == 'interview' or score.status == 'technical' %}bg-purple{% elif score.status == 'offered' or score.status == 'hired' %}bg-primary{% elif score.status == 'rejected' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                    {{ score.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'candidate_detail' score.candidate.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                <p class="text-muted">No screening results yet. Upload a resume to get started!</p>
+                <a href="{% url 'candidate_upload' %}" class="btn btn-primary">Screen First Resume</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

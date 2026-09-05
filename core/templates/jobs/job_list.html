@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Jobs - AI Resume Screening{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 animate-fade-up">
+        <div class="depth-1">
+            <h1 class="page-title">Job Postings</h1>
+            <p class="text-muted mb-0">Manage your job openings and required skills.</p>
+        </div>
+        <a href="{% url 'job_create' %}" class="btn btn-primary btn-lg glow-border">
+            <i class="fas fa-plus me-2"></i>Post New Job
+        </a>
+    </div>
+
+    {% if jobs %}
+    <div class="row g-4">
+        {% for job in jobs %}
+        <div class="col-md-6 col-lg-4 reveal-on-scroll" style="transition-delay: {{ forloop.counter0|add:1 }}0ms">
+            <div class="card job-card cinematic-shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="job-icon"><i class="fas fa-briefcase"></i></div>
+                        <span class="badge bg-primary-soft text-primary">{{ job.candidates.count }} candidates</span>
+                    </div>
+                    <h5 class="card-title fw-bold">{{ job.title }}</h5>
+                    <p class="card-text text-muted job-desc">{{ job.description|truncatechars:100 }}</p>
+                    {% if job.skills_list %}
+                    <div class="mb-3">
+                        <small class="text-muted fw-semibold">Detected Skills:</small>
+                        <div class="d-flex flex-wrap gap-1 mt-1">
+                            {% for skill in job.skills_list %}
+                            <span class="badge skill-badge">{{ skill }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted"><i class="fas fa-calendar me-1"></i>{{ job.created_at|date:"M d, Y" }}</small>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'job_detail' job.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye me-1"></i>View
+                            </a>
+                            <form method="post" action="{% url 'job_delete' job.id %}" onsubmit="return confirm('Are you sure you want to delete this job and all its candidates?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash me-1"></i>Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card card-custom text-center py-5 animate-fade-up cinematic-shadow spotlight-behind">
+        <i class="fas fa-briefcase fa-3x text-muted mb-3"></i>
+        <h4>No Jobs Posted Yet</h4>
+        <p class="text-muted">Create your first job posting to start screening resumes.</p>
+        <a href="{% url 'job_create' %}" class="btn btn-primary mx-auto glow-border">
+            <i class="fas fa-plus me-2"></i>Post First Job
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

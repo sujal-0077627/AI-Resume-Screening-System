@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Screen Resumes - AI Resume Screening{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card card-custom animate-fade-up cinematic-shadow hud-overlay spotlight-behind">
+                <div class="card-header card-header-custom">
+                    <h4 class="mb-0"><i class="fas fa-file-invoice me-2"></i>Screen Resume(s) with AI</h4>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-info d-flex align-items-center mb-4">
+                        <i class="fas fa-info-circle me-3 fa-lg"></i>
+                        <div>
+                            <strong>Multi-Format AI Screening:</strong> Supports <strong>PDF, Microsoft Word (.docx), and Text (.txt)</strong> resumes. The system automatically extracts contact information, links (LinkedIn/GitHub), estimated experience, and evaluates candidate fit against the job's custom cutoff score.
+                        </div>
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data" id="uploadForm">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold"><i class="fas fa-briefcase me-1"></i>Target Job Role</label>
+                            <select name="job" class="form-select form-select-lg" required>
+                                <option value="">-- Choose a job posting --</option>
+                                {% for job in jobs %}
+                                <option value="{{ job.id }}">{{ job.title }} (Cutoff: {{ job.cutoff_score }}%)</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold"><i class="fas fa-upload me-1"></i>Upload Resume Documents</label>
+                            <input type="file" name="resume" class="form-control form-control-lg" accept=".pdf,.docx,.doc,.txt,.rtf" multiple required id="resumeInput">
+                            <div class="form-text">Upload one or multiple resumes (.pdf, .docx, .txt). Batch upload supported up to 50 MB.</div>
+                            <div id="fileList" class="mt-2"></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg w-100 glow-border" id="submitBtn">
+                            <i class="fas fa-magic me-2"></i>Run AI Screening Engine
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('resumeInput').addEventListener('change', function(e) {
+    const fileList = document.getElementById('fileList');
+    const files = e.target.files;
+    if (files.length > 0) {
+        let html = '<div class="alert alert-success py-2 mb-0"><strong>' + files.length + ' document(s) ready for screening:</strong><ul class="mb-0 mt-1">';
+        for (let i = 0; i < files.length; i++) {
+            const sizeKB = (files[i].size / 1024).toFixed(1);
+            html += '<li>' + files[i].name + ' (' + sizeKB + ' KB)</li>';
+        }
+        html += '</ul></div>';
+        fileList.innerHTML = html;
+    } else {
+        fileList.innerHTML = '';
+    }
+});
+
+document.getElementById('uploadForm').addEventListener('submit', function() {
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Extracting & Screening Resumes...';
+});
+</script>
+{% endblock %}

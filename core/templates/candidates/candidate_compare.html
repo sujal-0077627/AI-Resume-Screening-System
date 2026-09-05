@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% block title %}Compare Candidates - AI Resume Screening{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 animate-fade-up">
+        <div class="depth-1">
+            <a href="{% url 'candidate_list' %}" class="text-muted text-decoration-none mb-2 d-inline-block">
+                <i class="fas fa-arrow-left me-1"></i>Back to Candidates List
+            </a>
+            <h1 class="page-title mb-0">Candidate Comparison Matrix</h1>
+            <p class="text-muted">Side-by-side evaluation of top applicants.</p>
+        </div>
+        <a href="{% url 'candidate_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-list me-1"></i>All Candidates
+        </a>
+    </div>
+
+    <!-- Comparison Table Matrix -->
+    <div class="card card-custom animate-fade-up cinematic-shadow hud-overlay">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 220px;" class="bg-light text-muted">Feature / Metric</th>
+                            {% for item in comparison_data %}
+                            <th class="text-center" style="min-width: 260px;">
+                                <div class="fs-5 fw-bold text-primary">{{ item.candidate.name|default:"Candidate" }}</div>
+                                <span class="badge bg-light text-dark border mt-1">{{ item.candidate.job.title }}</span>
+                            </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Overall AI Match Score -->
+                        <tr>
+                            <td class="fw-bold bg-light"><i class="fas fa-chart-pie me-2 text-primary"></i>Overall Match Score</td>
+                            {% for item in comparison_data %}
+                            <td class="text-center">
+                                {% if item.score %}
+                                <div class="fs-3 fw-bold {% if item.score.overall_score >= item.candidate.job.cutoff_score %}text-success{% elif item.score.overall_score >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                                    {{ item.score.overall_score }}%
+                                </div>
+                                <div class="progress mx-auto mt-2" style="width: 140px; height: 8px;">
+                                    <div class="progress-bar {% if item.score.overall_score >= item.candidate.job.cutoff_score %}bg-success{% elif item.score.overall_score >= 50 %}bg-warning{% else %}bg-danger{% endif %}"
+                                         style="width: {{ item.score.overall_score }}%"></div>
+                                </div>
+                                <small class="text-muted d-block mt-1">Cutoff: {{ item.candidate.job.cutoff_score }}%</small>
+                                {% else %}
+                                <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+
+                        <!-- Semantic Similarity -->
+                        <tr>
+                            <td class="fw-bold bg-light"><i class="fas fa-brain me-2 text-info"></i>Semantic Alignment</td>
+                            {% for item in comparison_data %}
+                            <td class="text-center">
+                                {% if item.score %}
+                                <span class="fw-bold text-info fs-6">{{ item.score.semantic_score }}%</span>
+                                <div class="progress mx-auto mt-1" style="width: 120px; height: 6px;">
+                                    <div class="progress-bar bg-info" style="width: {{ item.score.semantic_score }}%"></div>
+                                </div>
+                                {% else %}—{% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+
+                        <!-- TF-IDF Term Alignment -->
+                        <tr>
+                            <td class="fw-bold bg-light"><i class="fas fa-file-code me-2 text-primary"></i>Technical Term Density</td>
+                            {% for item in comparison_data %}
+                            <td class="text-center">
+                                {% if item.score %}
+                                <span class="fw-bold text-primary fs-6">{{ item.score.tfidf_score }}%</span>
+                                <div class="progress mx-auto mt-1" style="width: 120px; height: 6px;">
+                                    <div class="progress-bar bg-primary" style="width: {{ item.score.tfidf_score }}%"></div>
+                                </div>
+                                {% else %}—{% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+
+                        <!-- Experience (Years) -->
+                        <tr>
+                            <td class="fw-bold bg-light"><i class="fas fa-history me-2 text-purple"></i>Experience (Years)</td>
+                            {% for item in comparison_data %}
+                            <td class="text-center">
+                                {% if item.candidate.experience_years > 0 %}
+                                <span class="badge bg-purple fs-6">{{ item.candidate.experience_years }} Years</span>
+                                {% if item.candidate.job.experience_required > 0 %}
+                                <small class="d-block text-muted mt-1">Req: {{ item.candidate.job.experience_required }} yrs</small>
+                                {% endif %}
+                                {% else %}
+                                <span class="text-muted">Not detected</span>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+
+                        <!-- Matched Skills -->
+                        <tr>
+                            <td class="fw-bold bg-light"><i class="fas fa-check-circle me-2 text-success"></i>Matched Skills</td>
+                            {% for item in comparison_data %}
+                            <td>
+                                {% if item.matched_skills %}
+                                <div class="d-flex flex-wrap gap-1">
+                                    {% for sk in item.matched_skills %}
+                                    <span class="badge bg-success-soft text-success border border-success">{{ sk }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <small class="text-muted">None explicitly found</small>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+
+                        <!-- Missing Skills -->
+                        <tr>
+                            <td class="fw-bold bg-light"><i class="fas fa-times-circle me-2 text-danger"></i>Missing Skills</td>
+                            {% for item in comparison_data %}
+                            <td>
+                                {% if item.missing_skills %}
+                                <div class="d-flex flex-wrap gap-1">
+                                    {% for sk in item.missing_skills %}
+                                    <span class="badge bg-danger-soft text-danger border border-danger">{{ sk }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <span class="badge bg-success"><i class="fas fa-check me-1"></i>All Skills Matched</span>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+
+                        <!-- Contact & Links -->
+                        <tr>
+                            <td class="fw-bold bg-light"><i class="fas fa-address-card me-2 text-secondary"></i>Contact & Profiles</td>
+                            {% for item in comparison_data %}
+                            <td>
+                                <div class="small mb-1"><i class="fas fa-envelope me-1 text-muted"></i>{{ item.candidate.email|default:"No email" }}</div>
+                                <div class="small mb-2"><i class="fas fa-phone me-1 text-muted"></i>{{ item.candidate.phone|default:"No phone" }}</div>
+                                <div class="d-flex gap-2">
+                                    {% if item.candidate.linkedin_url %}
+                                    <a href="{{ item.candidate.linkedin_url }}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2" title="LinkedIn"><i class="fab fa-linkedin me-1"></i>LinkedIn</a>
+                                    {% endif %}
+                                    {% if item.candidate.github_url %}
+                                    <a href="{{ item.candidate.github_url }}" target="_blank" class="btn btn-sm btn-outline-dark py-0 px-2" title="GitHub"><i class="fab fa-github me-1"></i>GitHub</a>
+                                    {% endif %}
+                                    {% if item.candidate.portfolio_url %}
+                                    <a href="{{ item.candidate.portfolio_url }}" target="_blank" class="btn btn-sm btn-outline-success py-0 px-2" title="Portfolio"><i class="fas fa-globe me-1"></i>Website</a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            {% endfor %}
+                        </tr>
+
+                        <!-- Current Status -->
+                        <tr>
+                            <td class="fw-bold bg-light"><i class="fas fa-tasks me-2 text-warning"></i>Recruitment Status</td>
+                            {% for item in comparison_data %}
+                            <td class="text-center">
+                                {% if item.score %}
+                                <span class="badge {% if item.score.status == 'shortlisted' or item.score.status == 'selected' %}bg-success{% elif item.score.status == 'rejected' %}bg-danger{% elif item.score.status == 'interview' %}bg-purple{% else %}bg-secondary{% endif %} fs-6 px-3 py-2">
+                                    {{ item.score.get_status_display }}
+                                </span>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+
+                        <!-- Action buttons -->
+                        <tr>
+                            <td class="fw-bold bg-light"><i class="fas fa-arrow-circle-right me-2 text-muted"></i>View Profile</td>
+                            {% for item in comparison_data %}
+                            <td class="text-center">
+                                <a href="{% url 'candidate_detail' item.candidate.id %}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-user me-1"></i>Open Profile
+                                </a>
+                            </td>
+                            {% endfor %}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+{% block title %}{{ candidate.name|default:"Candidate" }} - AI Resume Screening{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Top Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 animate-fade-up">
+        <div class="depth-1">
+            <a href="{% url 'candidate_list' %}" class="text-muted text-decoration-none mb-2 d-inline-block">
+                <i class="fas fa-arrow-left me-1"></i>Back to Candidates List
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <h1 class="page-title mb-0">{{ candidate.name|default:"Candidate" }}</h1>
+                {% if score %}
+                <span class="badge {% if score.status == 'shortlisted' or score.status == 'selected' %}bg-success{% elif score.status == 'rejected' %}bg-danger{% elif score.status == 'interview' %}bg-purple{% else %}bg-secondary{% endif %} fs-6">
+                    {{ score.get_status_display }}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            {% if candidate.resume %}
+            <a href="{{ candidate.resume.url }}" target="_blank" class="btn btn-outline-primary glow-border">
+                <i class="fas fa-file-alt me-2"></i>Original Resume File
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left Column: Candidate Profile & Recruiter Tools -->
+        <div class="col-lg-4">
+            <!-- Candidate Info Card -->
+            <div class="card card-custom mb-4 animate-fade-up cinematic-shadow">
+                <div class="card-header card-header-custom">
+                    <h5 class="mb-0"><i class="fas fa-user-circle me-2"></i>Candidate Profile</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted d-block"><i class="fas fa-user me-1"></i>Full Name</small>
+                        <strong class="fs-6">{{ candidate.name|default:"N/A" }}</strong>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted d-block"><i class="fas fa-envelope me-1"></i>Email Address</small>
+                        <strong>{{ candidate.email|default:"N/A" }}</strong>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted d-block"><i class="fas fa-phone me-1"></i>Phone Number</small>
+                        <strong>{{ candidate.phone|default:"N/A" }}</strong>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted d-block"><i class="fas fa-briefcase me-1"></i>Applied Role</small>
+                        <strong>{{ candidate.job.title }}</strong>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted d-block"><i class="fas fa-history me-1"></i>Estimated Experience</small>
+                        {% if candidate.experience_years > 0 %}
+                        <span class="badge bg-info text-dark fs-6">{{ candidate.experience_years }} Years</span>
+                        {% else %}
+                        <span class="text-muted">Not detected</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Social / Portfolio Links -->
+                    <div class="mb-3">
+                        <small class="text-muted d-block mb-1"><i class="fas fa-link me-1"></i>Professional Profiles</small>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% if candidate.linkedin_url %}
+                            <a href="{{ candidate.linkedin_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="fab fa-linkedin me-1"></i>LinkedIn
+                            </a>
+                            {% endif %}
+                            {% if candidate.github_url %}
+                            <a href="{{ candidate.github_url }}" target="_blank" class="btn btn-sm btn-outline-dark">
+                                <i class="fab fa-github me-1"></i>GitHub
+                            </a>
+                            {% endif %}
+                            {% if candidate.portfolio_url %}
+                            <a href="{{ candidate.portfolio_url }}" target="_blank" class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-globe me-1"></i>Portfolio
+                            </a>
+                            {% endif %}
+                            {% if not candidate.linkedin_url and not candidate.github_url and not candidate.portfolio_url %}
+                            <span class="text-muted small">No web links detected</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr>
+                    <small class="text-muted d-block mb-1"><i class="fas fa-clock me-1"></i>Uploaded On</small>
+                    <span class="small text-muted">{{ candidate.uploaded_at|date:"M d, Y H:i" }}</span>
+                </div>
+            </div>
+
+            <!-- Recruiter Actions: Status -->
+            <div class="card card-custom mb-4 animate-fade-up cinematic-shadow">
+                <div class="card-header card-header-custom">
+                    <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Update Pipeline Status</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Update Status Form -->
+                    <form method="POST" action="{% url 'candidate_update_status' candidate.id %}">
+                        {% csrf_token %}
+                        <label class="form-label fw-bold small text-muted">Candidate Stage</label>
+                        <div class="input-group mb-2">
+                            <select name="status" class="form-select">
+                                {% for code, label in status_choices %}
+                                <option value="{{ code }}" {% if score and score.status == code %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn btn-primary" onclick="return confirm('Update status and automatically send notification email to candidate?')">
+                                <i class="fas fa-paper-plane me-1"></i>Save & Send Email
+                            </button>
+                        </div>
+                        <div class="form-text small text-muted">
+                            <i class="fas fa-info-circle me-1"></i>Status save hone par candidate (<strong>{{ candidate.email|default:"No email" }}</strong>) ko auto-generated status email turant send ho jayegi.
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: AI Match Score, Breakdown, and Email Dispatch -->
+        <div class="col-lg-8">
+            {% if score %}
+            <!-- Score Card -->
+            <div class="card card-custom mb-4 animate-fade-up cinematic-shadow hud-overlay">
+                <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>AI Match Score & Analysis</h5>
+                    <span class="badge bg-light text-dark border">Job Cutoff: {{ candidate.job.cutoff_score }}%</span>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center mb-4">
+                        <div class="col-md-4 text-center">
+                            <div class="score-circle score-hologram tilt-3d {% if score.overall_score >= candidate.job.cutoff_score %}score-high{% elif score.overall_score >= 50 %}score-mid{% else %}score-low{% endif %}">
+                                <span class="score-number">{{ score.overall_score }}%</span>
+                            </div>
+                            <small class="d-block text-muted mt-2 fw-semibold">
+                                {% if score.overall_score >= candidate.job.cutoff_score %}
+                                <span class="text-success"><i class="fas fa-check-circle me-1"></i>Meets Cutoff</span>
+                                {% else %}
+                                <span class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>Below Cutoff</span>
+                                {% endif %}
+                            </small>
+                        </div>
+                        <div class="col-md-8">
+                            <!-- Semantic Similarity -->
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small class="fw-bold">Semantic Meaning Match</small>
+                                    <strong>{{ score.semantic_score }}%</strong>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-info" style="width: {{ score.semantic_score }}%"></div>
+                                </div>
+                            </div>
+                            <!-- TF-IDF Term Density -->
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small class="fw-bold">Technical N-Gram Density (TF-IDF)</small>
+                                    <strong>{{ score.tfidf_score }}%</strong>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-primary" style="width: {{ score.tfidf_score }}%"></div>
+                                </div>
+                            </div>
+                            <!-- Skills Match -->
+                            <div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small class="fw-bold">Required Skills Coverage</small>
+                                    <strong>{{ matched_list|length }}/{{ job_skills_count }} Matched</strong>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-success" style="width: {% if job_skills_count %}{{ matched_list|length|floatformat:2 }}{% else %}0{% endif %}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Skills Badges -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="p-3 rounded bg-success-soft h-100">
+                                <h6 class="text-success mb-2"><i class="fas fa-check-circle me-1"></i>Matched Skills ({{ matched_list|length }})</h6>
+                                {% if matched_list %}
+                                <div class="d-flex flex-wrap gap-1">
+                                    {% for skill in matched_list %}
+                                    <span class="badge bg-success">{{ skill }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <small class="text-muted">None explicitly detected</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 rounded bg-danger-soft h-100">
+                                <h6 class="text-danger mb-2"><i class="fas fa-times-circle me-1"></i>Missing Skills ({{ missing_list|length }})</h6>
+                                {% if missing_list %}
+                                <div class="d-flex flex-wrap gap-1">
+                                    {% for skill in missing_list %}
+                                    <span class="badge bg-danger">{{ skill }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <small class="text-success"><i class="fas fa-check me-1"></i>All required skills found in resume!</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Why this score Explanation Box -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-muted mb-2"><i class="fas fa-lightbulb me-1"></i>Explainable AI Analysis</h6>
+                        <div class="explanation-box p-3 rounded border bg-light">
+                            {{ score.explanation|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- Resume Extracted Text Preview -->
+            <div class="card card-custom animate-fade-up cinematic-shadow">
+                <div class="card-header card-header-custom">
+                    <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Parsed Document Text</h5>
+                </div>
+                <div class="card-body">
+                    <div class="extracted-text" style="max-height: 250px; overflow-y: auto; font-size: 0.85rem;">
+                        {{ candidate.extracted_text|linebreaks }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

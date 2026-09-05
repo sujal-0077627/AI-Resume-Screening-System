@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% block title %}{{ job.title }} - AI Resume Screening{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 animate-fade-up">
+        <div class="depth-1">
+            <a href="{% url 'job_list' %}" class="text-muted text-decoration-none mb-2 d-inline-block">
+                <i class="fas fa-arrow-left me-1"></i>Back to Jobs List
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <h1 class="page-title mb-0">{{ job.title }}</h1>
+                <span class="badge bg-purple fs-6">{{ job.company_name }}</span>
+            </div>
+        </div>
+        <a href="{% url 'candidate_upload' %}" class="btn btn-primary glow-border">
+            <i class="fas fa-upload me-2"></i>Screen Resumes for this Job
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left: Job Details Card -->
+        <div class="col-lg-4">
+            <div class="card card-custom animate-fade-up cinematic-shadow">
+                <div class="card-header card-header-custom">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Role Specification</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+                        <span class="text-muted"><i class="fas fa-sliders-h me-1"></i>Shortlist Cutoff:</span>
+                        <strong class="text-success">{{ job.cutoff_score }}%</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+                        <span class="text-muted"><i class="fas fa-history me-1"></i>Min Experience:</span>
+                        <strong>{% if job.experience_required > 0 %}{{ job.experience_required }} Years{% else %}Any level{% endif %}</strong>
+                    </div>
+
+                    <h6 class="fw-bold text-muted mt-3">Job Description</h6>
+                    <p class="job-desc-full" style="white-space: pre-line; font-size: 0.95rem;">{{ job.description }}</p>
+
+                    {% if job.skills_list %}
+                    <h6 class="fw-bold text-muted mt-3">Required Technical Skills ({{ job.skills_list|length }})</h6>
+                    <div class="d-flex flex-wrap gap-1">
+                        {% for skill in job.skills_list %}
+                        <span class="badge skill-badge bg-primary-soft text-primary border border-primary">{{ skill }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <hr>
+                    <small class="text-muted">
+                        <i class="fas fa-calendar me-1"></i>Posted on: {{ job.created_at|date:"M d, Y" }}
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Screened Applicants Table -->
+        <div class="col-lg-8">
+            <div class="card card-custom animate-fade-up cinematic-shadow hud-overlay" style="animation-delay: 0.1s">
+                <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Screened Applicants ({{ scores.count }})</h5>
+                    {% if scores.count >= 2 %}
+                    <a href="{% url 'candidate_list' %}?job={{ job.id }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-filter me-1"></i>Filter in Candidates View
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="card-body p-0">
+                    {% if scores %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Candidate</th>
+                                    <th>Experience</th>
+                                    <th>AI Score</th>
+                                    <th>Pipeline Status</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for score in scores %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'candidate_detail' score.candidate.id %}" class="fw-bold text-decoration-none text-body">
+                                            {{ score.candidate.name|default:"Candidate" }}
+                                        </a>
+                                        <small class="text-muted d-block">{{ score.candidate.email|default:"No email" }}</small>
+                                    </td>
+                                    <td>
+                                        {% if score.candidate.experience_years > 0 %}
+                                        <span class="badge bg-info-soft text-info">{{ score.candidate.experience_years }} yrs</span>
+                                        {% else %}
+                                        <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="progress score-progress" style="width: 80px; height: 8px;">
+                                                <div class="progress-bar {% if score.overall_score >= job.cutoff_score %}bg-success{% elif score.overall_score >= 50 %}bg-warning{% else %}bg-danger{% endif %}"
+                                                     style="width: {{ score.overall_score }}%"></div>
+                                            </div>
+                                            <span class="fw-bold">{{ score.overall_score }}%</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if score.status == 'shortlisted' or score.status == 'selected' %}
+                                        <span class="badge bg-success">Shortlisted</span>
+                                        {% elif score.status == 'interview' or score.status == 'technical' %}
+                                        <span class="badge bg-purple">Interview</span>
+                                        {% elif score.status == 'offered' or score.status == 'hired' %}
+                                        <span class="badge bg-primary">Hired</span>
+                                        {% elif score.status == 'rejected' %}
+                                        <span class="badge bg-danger">Rejected</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Screened</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{% url 'candidate_detail' score.candidate.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye me-1"></i>View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-file-invoice fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No resumes screened for this job role yet.</p>
+                        <a href="{% url 'candidate_upload' %}" class="btn btn-primary glow-border">Screen First Resume</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
