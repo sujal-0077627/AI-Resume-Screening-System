@@ -26,8 +26,10 @@ ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',')
 # Reverse proxy SSL header (essential for Hugging Face Spaces & cloud reverse proxies)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-# CSRF Trusted Origins (required for Django 4+ behind reverse proxies like Hugging Face Spaces)
+# CSRF Trusted Origins (required for Django 4+ behind reverse proxies like Render & Hugging Face)
 CSRF_TRUSTED_ORIGINS = [
+    'https://*.onrender.com',
+    'http://*.onrender.com',
     'https://*.hf.space',
     'http://*.hf.space',
     'http://localhost:7860',

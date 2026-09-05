@@ -1,4 +1,4 @@
-name: Sync to Hugging Face Space
+name: Sync to Hugging Face Space (Optional)
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
 jobs:
   sync-to-hub:
     runs-on: ubuntu-latest
+    if: "${{ secrets.HF_TOKEN != '' }}"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

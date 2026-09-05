@@ -3,7 +3,7 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    PORT=7860
+    PORT=10000
 
 WORKDIR /app
 
@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user with UID 1000 for Hugging Face Spaces compatibility
+# Create non-root user with UID 1000
 RUN useradd -m -u 1000 user
 
 COPY requirements.txt .
@@ -22,7 +22,7 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY --chown=user:user . .
 
-# Ensure storage directories exist and have proper permissions for user 1000
+# Ensure storage directories exist and have proper permissions
 RUN mkdir -p /app/staticfiles /app/media && \
     chown -R user:user /app && \
     chmod -R 775 /app
@@ -31,6 +31,7 @@ USER user
 
 RUN python manage.py collectstatic --noinput
 
-EXPOSE 7860
+EXPOSE 10000 8000 7860
 
-CMD ["sh", "-c", "python manage.py migrate && python manage.py create_admin && gunicorn screening.wsgi:application --bind 0.0.0.0:7860 --workers 2 --timeout 120"]
+# 1 Worker + 2 Threads: Keeps RAM usage under ~250MB (perfect for Render 512MB free tier)
+CMD ["sh", "-c", "python manage.py migrate && python manage.py create_admin && gunicorn screening.wsgi:application --bind 0.0.0.0:${PORT:-10000} --workers 1 --threads 2 --timeout 120"]
